@@ -1,8 +1,9 @@
 {
   build(DeepAlertStackName, SecretArn, LambdaRoleArn, VpcConfig={}):: {
-    local ReportTopic = {
-      'Fn::ImportValue': DeepAlertStackName + '-ReportTopic',
-    },
+    local TaskTopic = { 'Fn::ImportValue': DeepAlertStackName + '-TaskTopic' },
+    local ContentQueue = { 'Fn::ImportValue': DeepAlertStackName + '-ContentQueue' },
+    local AttributeQueue = { 'Fn::ImportValue': DeepAlertStackName + '-AttributeQueue' },
+
 
     AWSTemplateFormatVersion: '2010-09-09',
     Transform: 'AWS::Serverless-2016-10-31',
@@ -22,14 +23,14 @@
           Environment: {
             Variables: {
               SECRET_ARN: SecretArn,
+              CONTENT_QUEUE: ContentQueue,
+              ATTRIBUTE_QUEUE: AttributeQueue,
             },
           },
           Events: {
             NotifyTopic: {
               Type: 'SNS',
-              Properties: {
-                Topic: ReportTopic,
-              },
+              Properties: { Topic: TaskTopic },
             },
           },
         } + (if VpcConfig == {} then {} else { VpcConfig: VpcConfig }),
