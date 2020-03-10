@@ -77,8 +77,12 @@ type searchRequest struct {
 func sendSearchRequest(request searchRequest) (*string, error) {
 	url := fmt.Sprintf("%s/api/v1/search", request.MinervaEndpoint)
 	now := time.Now().UTC()
+	begin := now.Add(time.Hour * -2)
 	if request.Attr.Timestamp != nil {
-		now = *request.Attr.Timestamp
+		tsBegin := request.Attr.Timestamp.Add(time.Hour - 1)
+		if begin.After(tsBegin) {
+			begin = tsBegin
+		}
 	}
 
 	value := request.Attr.Value
@@ -88,7 +92,7 @@ func sendSearchRequest(request searchRequest) (*string, error) {
 
 	body := api.ExecSearchRequest{
 		Query:         []api.Query{api.Query{Term: value}},
-		StartDateTime: now.Add(time.Hour * -2).Format("2006-01-02T15:04:05"),
+		StartDateTime: begin.Format("2006-01-02T15:04:05"),
 		EndDateTime:   now.Format("2006-01-02T15:04:05"),
 	}
 	raw, err := json.Marshal(body)
